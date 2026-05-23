@@ -1,3 +1,4 @@
+from asyncio import streams
 import os
 import subprocess
 import time
@@ -102,32 +103,22 @@ def extract_streams(url, mode, fmt=None):
     return None, title
 
 # ================= PIPE MERGE =================
-def play_with_pipe(url, mode):
-    print("\n[FIX] Using ffmpeg pipe merge (guaranteed audio)")
-    print(f"[DEBUG] yt-dlp retries={YTDLP_RETRIES}, fragment-retries={YTDLP_FRAGMENT_RETRIES}")
-
-    ytdlp_cmd = [
-        "yt-dlp",
-        "--retries", str(YTDLP_RETRIES),
-        "--fragment-retries", str(YTDLP_FRAGMENT_RETRIES),
-        "-f", "bestvideo+bestaudio/best",
-        "-o", "-",
-        url
-    ]
-
-    vlc_cmd = [
+def play_with_vlc_dual(video_url, audio_url):
+    cmd = [
         VLC_PATH,
-        "--network-caching=2000",
-        "--no-video-title-show",
-        "-"
+        video_url,
+        f":input-slave={audio_url}",
+        "--network-caching=3000",
+        "--file-caching=3000",
+        "--live-caching=3000",
+        "--no-video-title-show"
     ]
 
-    # pipe yt-dlp → VLC
-    p1 = subprocess.Popen(ytdlp_cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    p2 = subprocess.Popen(vlc_cmd, stdin=p1.stdout, stderr=subprocess.DEVNULL)
-    p1.stdout.close()
-
-    return p1, p2
+    return subprocess.Popen(
+        cmd,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
 
 # ================= PLAYER =================
 class Player:
@@ -164,7 +155,11 @@ class Player:
 
         else:
             # ❌ DASH → use pipe fix
-            self.ytdlp_process, self.process = play_with_pipe(url, self.mode)
+            video_url = streams[0]
+            audio_url = streams[1]
+
+            self.ytdlp_process = None
+            self.process = play_with_vlc_dual(video_url, audio_url)
 
         clear()
         print(f"🎵 Now Playing ({self.index+1}/{len(self.playlist)})")
@@ -266,3 +261,4 @@ mode = "audio" if input("[1] Audio [2] Video > ") == "1" else "video"
 
 player = Player(playlist, mode, type_)
 player.run()
+ 
