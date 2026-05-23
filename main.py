@@ -1,11 +1,8 @@
-from asyncio import streams
+from asyncio import subprocess
 import os
-import subprocess
 import time
 import yt_dlp
-import keyboard
 import msvcrt
-import threading
 
 # ================= PATHS =================
 VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
