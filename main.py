@@ -1,8 +1,9 @@
-from asyncio import subprocess
 import os
+import subprocess
 import time
 import yt_dlp
 import msvcrt
+
 
 # ================= PATHS =================
 VLC_PATH = r"C:\Program Files\VideoLAN\VLC\vlc.exe"
